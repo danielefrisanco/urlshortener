@@ -34,7 +34,7 @@ app.use(bodyParser.json());
 	*/
 app.post('/shorten', function(req, res) {
   console.log(req.body)
-  res.send(res);
+  res.send("res");
 
 });
 
