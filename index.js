@@ -13,15 +13,11 @@ mongoose.connect('mongodb://localhost');//.set('debug', true);
 var app = express();
 
 app.use(bodyParser.urlencoded({
-  extended: true
+  extended: false
 }));
 
 app.use(bodyParser.json());
- 
-
-
-//   check header
-
+console.log("make sure it is a json")
 
 
 	/**
@@ -33,12 +29,27 @@ app.use(bodyParser.json());
 	* @apiError {string}
 	*/
 app.post('/shorten', function(req, res) {
-  // console.log(req.body)
+  console.log(req.body.url)
+  console.log(req.body.shortcode)
+  res.setHeader('Content-Type', 'application/json')
+  if(!req.body) {
+  	return res.status(415).send(JSON.stringify({"error": "body not present"}));
+  }
 
-	ShortenedUrl.shortenUrl("asd", "asdasd")
+  if(!req.body.url) {
+		return res.status(400).send(JSON.stringify({"error": "url is not present"}));
 
+  } 
 
-  res.send("res");
+ 
+
+console.log("explain result: why it was easier for me to return status from the model")
+	var result = ShortenedUrl.shortenUrl(req.body.url, req.body.shortcode);
+  if(result) {
+  	return res.status(result.status).send(JSON.stringify(result.message));
+  }
+
+	// return res.status(201).send(JSON.stringify({result}));
 
 });
 

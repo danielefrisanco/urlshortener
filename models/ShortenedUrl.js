@@ -5,18 +5,20 @@ var RandExp = require('randexp');
 
 mongoose.Promise = global.Promise;
 
+const shortcodeRegex = /^[0-9a-zA-Z_]{6}$/;
+
 var ShortenedUrlSchema = new mongoose.Schema({
   id: mongoose.Schema.ObjectId,
   url: {type: String, index: true, validate: /^(?!\s*$).+/},
-  shortcode: {type: String, index: true, unique: true, validate: /^[0-9a-zA-Z_]{6}$/},
+  shortcode: {type: String, index: true, unique: true, validate: shortcodeRegex},
   startDate: Schema.Types.Mixed,
   lastSeenDate: Schema.Types.Mixed,
   redirectCount: {type: Number, default: 0}
 });
 
-// function isShortcodeValid(shortcode) {
-//   return /^[0-9a-zA-Z_]{6}$/.test(shortcode);
-// };
+function isShortcodeValid(shortcode) {
+  return shortcodeRegex.test(shortcode);
+};
 
 
 function isBlank(str) {
@@ -26,7 +28,7 @@ function isBlank(str) {
 function generateShortcode() {
   // this will make it O(n)
   // shortid has fixed size, hashis needs a random value to start and doesnt guarantee there are no conflicts, so i just need to check in db for now
-  return new RandExp(/^[0-9a-zA-Z_]{6}$/).gen();
+  return new RandExp(shortcodeRegex).gen();
 };
 
 ShortenedUrlSchema.statics.shortenUrl = function(url, preferentialShortcode) {
@@ -54,7 +56,9 @@ ShortenedUrlSchema.statics.shortenUrl = function(url, preferentialShortcode) {
 
   // });  
   // } 
-
+  if(preferentialShortcode && !isShortcodeValid(preferentialShortcode)) {
+    return {status: 422, message: "The shortcode fails to meet the following regexp:" + shortcodeRegex};
+  }
   var now = Date.now();
   var attemptCode = preferentialShortcode;
   if(isBlank(attemptCode)) {
@@ -69,14 +73,14 @@ ShortenedUrlSchema.statics.shortenUrl = function(url, preferentialShortcode) {
   });
   console.log("shortenedUrl");
   return shortenedUrl.save().then((result) => {
-    console.log(result);
+    console.log(result.shortcode);
 
-    return result;
+    return {status: 201, message: {"shortcode": result.shortcode}};
   }).catch((error) => {
 
-    console.log(error);
+    console.log(error.toJSON());
     console.error("ERROR while saving");
-    return null;
+    return {status: 409, message: "The the desired shortcode is already in use. Shortcodes are case-sensitive."};
   })
   
 };
