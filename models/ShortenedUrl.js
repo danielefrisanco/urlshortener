@@ -20,6 +20,8 @@ function validateShortcode(shortcode) {
 
 
 function generateShortcode() {
+  // this will make it O(n)
+  // shortid has fixed size, hashis needs a random value to start and doesnt guarantee there are no conflicts, so i just need to check in db for now
   return new RandExp(/^[0-9a-zA-Z_]{6}$/).gen();
 };
 
