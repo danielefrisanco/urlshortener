@@ -2,9 +2,10 @@
 var express = require('express');
 var mongoose = require('mongoose');
 var bodyParser = require('body-parser');
+var path = require('path');
 
 //Models
-var ShortCode = require("./models/ShortCode.js");
+var ShortenedUrl = require("./models/ShortenedUrl.js");
 
 mongoose.connect('mongodb://localhost');//.set('debug', true);
 

@@ -4,7 +4,7 @@
   "description": "url shortener",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha lib/**/**.spec.js"
   },
   "author": "daniele frisanco",
   "license": "ISC",
@@ -12,7 +12,12 @@
     "chai": "^4.1.2",
     "mocha": "^4.0.1"
   },
-  "scripts": {
-    "test": "mocha lib/**/**.spec.js"
-},
+  "dependencies": {
+    "bluebird": "^3.5.1",
+    "body-parser": "^1.18.2",
+    "express": "^4.16.2",
+    "mongoose": "^4.13.7",
+    "path": "^0.12.7",
+    "randexp": "^0.4.6"
+  }
 }
