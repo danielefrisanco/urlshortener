@@ -20,7 +20,7 @@ var ShortenedUrlSchema = new mongoose.Schema({
 
 
 function isBlank(str) {
-  return !(str == undefined || str == null || str.replace(/\s/g, '') == '') 
+  return (str == undefined || str == null || str.replace(/\s/g, '') == '') 
 };
 
 function generateShortcode() {
@@ -68,10 +68,17 @@ ShortenedUrlSchema.statics.shortenUrl = function(url, preferentialShortcode) {
     redirectCount:0
   });
   console.log("shortenedUrl");
-  console.log(shortenedUrl);
+  return shortenedUrl.save().then((result) => {
+    console.log(result);
 
+    return result;
+  }).catch((error) => {
+
+    console.log(error);
+    console.error("ERROR while saving");
+    return null;
+  })
   
-  return shortenedUrl;
 };
 
 ShortenedUrlSchema.statics.retrieveUrl = function(shortcode) {

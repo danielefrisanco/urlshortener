@@ -33,7 +33,11 @@ app.use(bodyParser.json());
 	* @apiError {string}
 	*/
 app.post('/shorten', function(req, res) {
-  console.log(req.body)
+  // console.log(req.body)
+
+	ShortenedUrl.shortenUrl("asd", "asdasd")
+
+
   res.send("res");
 
 });
