@@ -3,6 +3,7 @@ var express = require('express');
 var mongoose = require('mongoose');
 var bodyParser = require('body-parser');
 var path = require('path');
+var http = require('http');
 
 //Models
 var ShortenedUrl = require("./models/ShortenedUrl.js");
@@ -16,7 +17,7 @@ app.use(bodyParser.urlencoded({
 }));
 
 app.use(bodyParser.json());
-
+ 
 
 
 //   check header
@@ -67,4 +68,5 @@ app.get('/:shortcode/stats', function(req, res) {
 
 });
 
+app.listen(8080);
 app.use(express.static(path.join(__dirname, 'static')));

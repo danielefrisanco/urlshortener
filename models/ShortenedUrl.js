@@ -7,17 +7,21 @@ mongoose.Promise = global.Promise;
 
 var ShortenedUrlSchema = new mongoose.Schema({
   id: mongoose.Schema.ObjectId,
-  url: {type: Schema.Types.Mixed, index: true},
-  shortcode: {type: Schema.Types.Mixed, index: true},
+  url: {type: String, index: true, validate: /^(?!\s*$).+/},
+  shortcode: {type: String, index: true, unique: true, validate: /^[0-9a-zA-Z_]{6}$/},
   startDate: Schema.Types.Mixed,
   lastSeenDate: Schema.Types.Mixed,
   redirectCount: {type: Number, default: 0}
 });
 
-function validateShortcode(shortcode) {
-  return /^[0-9a-zA-Z_]{6}$/.test(shortcode);
-};
+// function isShortcodeValid(shortcode) {
+//   return /^[0-9a-zA-Z_]{6}$/.test(shortcode);
+// };
 
+
+function isBlank(str) {
+  return !(str == undefined || str == null || str.replace(/\s/g, '') == '') 
+};
 
 function generateShortcode() {
   // this will make it O(n)
@@ -26,23 +30,60 @@ function generateShortcode() {
 };
 
 ShortenedUrlSchema.statics.shortenUrl = function(url, preferentialShortcode) {
-  if(url) {  
-    return this.retrieveUrl(preferentialShortcode).then((retrieved) => {
-      if(retrieved) {
-        return  null;
-      } else {
+  // if(!isBlank(url)) {
+  //   console.error("url is not present");
+  //   return null;
+  // }
+  
+  // if(isBlank(preferentialShortcode)) {
 
-      }
+    
 
-    });
-  } else {
-    console.error("url is not present");
-    return null;
+
+  // } 
+
+
+
+  // return this.retrieveUrl(preferentialShortcode).then((retrieved) => {
+  // if(retrieved) {
+  //   return null;
+  // } else {
+
+
+  // }
+
+  // });  
+  // } 
+
+  var now = Date.now();
+  var attemptCode = preferentialShortcode;
+  if(isBlank(attemptCode)) {
+    attemptCode = generateShortcode();
   }
+  var shortenedUrl = new this({
+    url: url,
+    shortcode: attemptCode,
+    startDate: now,
+    lastSeenDate: now,
+    redirectCount:0
+  });
+  console.log("shortenedUrl");
+  console.log(shortenedUrl);
+
+  
+  return shortenedUrl;
 };
 
 ShortenedUrlSchema.statics.retrieveUrl = function(shortcode) {
   console.log("retrieveUrl:", shortcode);
+
+  if(!isShortcodeValid(shortcode)) {
+
+    console.error("shortcode not valid");
+    return null;
+
+  }
+
   if(shortcode) {
     return this.findOne({"shortcode": shortcode}).then((shortenedUrl) => {
       if(shortenedUrl) {
