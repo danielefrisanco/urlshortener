@@ -44,10 +44,13 @@ app.post('/shorten', function(req, res) {
  
 
 console.log("explain result: why it was easier for me to return status from the model")
-	var result = ShortenedUrl.shortenUrl(req.body.url, req.body.shortcode);
-  if(result) {
-  	return res.status(result.status).send(JSON.stringify(result.message));
-  }
+	ShortenedUrl.shortenUrl(req.body.url, req.body.shortcode).then((result) => {
+	  if(result) {
+	    console.error(result);
+	  	return res.status(result.status).send(JSON.stringify(result.message));
+	  }
+		
+	})
 
 	// return res.status(201).send(JSON.stringify({result}));
 
@@ -82,6 +85,45 @@ app.get('/:shortcode/stats', function(req, res) {
   res.send(res);
 
 });
+
+
+
+function shortenUrl(url, preferentialShortcode) {
+  
+  if(preferentialShortcode && !ShortenedUrl.isShortcodeValid(preferentialShortcode)) {
+    return {status: 422, message: {"error": "The shortcode fails to meet the following regexp:" + ShortenedUrlSchema.shortcodeRegex}};
+  }
+  var attemptCode = preferentialShortcode;
+  if(ShortenedUrl.isBlank(attemptCode)) {
+    var attemptCodeAlreadyPresent = false;
+    do {
+      attemptCode = ShortenedUrl.generateShortcode();
+      console.log(attemptCode)
+      attemptCodeAlreadyPresent = ShortenedUrl.findOne({shortcode: attemptCode}).then((shortenedUrl) => {
+      console.log("AAAAAAshortenedUrl")
+      console.log(shortenedUrl)
+        return (!!shortenedUrl);
+      }).catch((err) => {
+      	console.log(err)
+      	return true;
+      })
+    } while(attemptCodeAlreadyPresent);
+  }
+
+  return ShortenedUrl.initialize(url, attemptCode).then((shortenedUrl) => {
+    if(shortenedUrl) {
+      return {status: 201, message: {"shortcode": shortenedUrl.shortcode}};
+    } else {
+      return {status: 409, message: {"error": "The the desired shortcode is already in use. Shortcodes are case-sensitive."}};
+    }
+  }).catch((error) => {
+    // console.log(error.toJSON());
+    console.error("ERROR while saving");
+    return {status: 409, message: {"error": "The the desired shortcode is already in use. Shortcodes are case-sensitive."}};
+  })
+  
+};
+
 
 app.listen(8080);
 app.use(express.static(path.join(__dirname, 'static')));
