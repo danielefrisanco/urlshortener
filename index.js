@@ -12,6 +12,16 @@ mongoose.connect('mongodb://localhost');//.set('debug', true);
 
 var app = express();
 
+const SHORTEN_URL_CREATED = 201,
+  URL_NOT_PRESENT = 400,
+  SHORTCODE_ALREADY_USED = 409,
+  SHORTCODE_NOT_VALID = 422,
+  SHORTCODE_FOUND = 302,
+  SHORTCODE_NOT_FOUND = 404,
+  STATS_FOUND = 200;
+
+
+
 app.use(bodyParser.urlencoded({
   extended: false
 }));
