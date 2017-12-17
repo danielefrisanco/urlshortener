@@ -66,12 +66,12 @@ console.log("explain result: why it was easier for me to return status from the 
 	* @apiError {string}
 	*/
 app.get('/:shortcode', function(req, res) {
-  console.log(req.params)
   retrieveUrl(req.params.shortcode).then((result) => {
-    if(result) {
-      console.error(result);
-      return res.status(result.status).send(JSON.stringify(result.message));
+    if(result && result.message.url) {
+      res.setHeader('Location', result.message.url);
+      return res.status(result.status).end();
     }
+    return res.status(result.status).send(JSON.stringify(result.message));
   });
 
 });
@@ -138,16 +138,8 @@ function shortenUrl(url, preferentialShortcode) {
 
 
 function retrieveUrl(shortcode) {
-  console.log("retrieveUrl:", shortcode);
 
-  if(!ShortenedUrl.isShortcodeValid(shortcode)) {
-
-    console.error("shortcode not valid");
-    return {status: 404, message: {"error": "The shortcode cannot be found in the system"}};
-
-  }
-
-  if(shortcode) {
+  if(ShortenedUrl.isShortcodeValid(shortcode)) {
     return ShortenedUrl.findOne({shortcode: shortcode}).then((shortenedUrl) => {
       if(shortenedUrl) {
         return {status: 302, message: {"url": shortenedUrl.url}};
@@ -165,8 +157,8 @@ function retrieveUrl(shortcode) {
   //   return {status: 404, message: {"error": "The shortcode cannot be found in the system"}};  
   }
   
-    return {status: 404, message: {"error": "The shortcode cannot be found in the system"}};  
-
+  return Promise.resolve({status: 404, message: {"error": "The shortcode cannot be found in the system"}});  
+    
 };
 
 

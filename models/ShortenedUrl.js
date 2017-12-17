@@ -16,7 +16,9 @@ var ShortenedUrlSchema = new mongoose.Schema({
   redirectCount: {type: Number, default: 0}
 });
 ShortenedUrlSchema.plugin(uniqueValidator);
-console.log("do i still need uniqueValidator?? mongoose-unique-validator")
+console.log("do i still need uniqueValidator?? mongoose-unique-validator");
+
+
 ShortenedUrlSchema.statics.isShortcodeValid = function(shortcode) {
   return shortcodeRegex.test(shortcode);
 };
