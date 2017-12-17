@@ -63,8 +63,9 @@ describe('App', function() {
         	expect(res).to.be.json;
           expect(res).to.have.status(201);
           expect(res).to.have.own.property("body");
-          expect(res.body).to.be.a("string");
-          expect(res.body).to.match(/^[0-9a-zA-Z_]{6}$/);
+          expect(res.body).to.have.nested.property("shortcode");
+          expect(res.body.shortcode).to.be.a("string");
+          expect(res.body.shortcode).to.match(/^[0-9a-zA-Z_]{6}$/);
           done();
         });
     });

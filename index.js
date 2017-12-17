@@ -52,7 +52,7 @@ app.post('/shorten', function(req, res) {
   }
 	return shortenUrl(req.body.url, req.body.shortcode).then((result) => {
     if(result.status == constants.SHORTEN_URL_CREATED) {
-	  	return res.status(result.status).send(JSON.stringify(result.shortcode));
+	  	return res.status(result.status).send(JSON.stringify({"shortcode": result.shortcode}));
 	  }  
     return res.status(result.status).end();
   });
