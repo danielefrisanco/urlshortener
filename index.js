@@ -19,7 +19,6 @@ app.use(bodyParser.urlencoded({
 
 app.use(bodyParser.json());
 console.log("make sure it is a json")
-console.log("remove error messages, only status code")
 
 
 	/**
@@ -31,29 +30,17 @@ console.log("remove error messages, only status code")
 	* @apiError {string}
 	*/
 app.post('/shorten', function(req, res) {
-  console.log(req.body.url)
-  console.log(req.body.shortcode)
   res.setHeader('Content-Type', 'application/json')
  
   if(!req.body || !req.body.url) {
 		return res.status(constants.URL_NOT_PRESENT).end();
-
-  } 
-
- 
-
-console.log("explain result: why it was easier for me to return status from the model")
+  }
 	return shortenUrl(req.body.url, req.body.shortcode).then((result) => {
     if(result.status == constants.SHORTEN_URL_CREATED) {
 	  	return res.status(result.status).send(JSON.stringify(result.shortcode));
 	  }  
     return res.status(result.status).end();
-
-		
-	});
-
-	// return res.status(201).send(JSON.stringify({result}));
-
+  });
 });
 
 
@@ -77,7 +64,6 @@ app.get('/:shortcode', function(req, res) {
     console.error(error);
     return res.status(constants.SHORTCODE_NOT_FOUND).end();
   });
-
 });
 
 
@@ -91,17 +77,17 @@ app.get('/:shortcode', function(req, res) {
 */
 app.get('/:shortcode/stats', function(req, res) {
   res.setHeader('Content-Type', 'application/json')
-
   retrieveShortenedUrl(req.params.shortcode).then((result) => {
-    if(shortenedUrl) {
+    if(result.status == constants.SHORTEN_URL_FOUND) {
       var response = {
-        "startDate": shortenedUrl.startDate,
-        "lastSeenDate": shortenedUrl.lastSeenDate,
-        "redirectCount": shortenedUrl.redirectCount
+        "startDate": result.shortenedUrl.startDate,
+        "lastSeenDate": result.shortenedUrl.lastSeenDate,
+        "redirectCount": result.shortenedUrl.redirectCount
       };
-      return res.status(constants.STATS_FOUND).send(JSON.stringify(response));
+      return res.status(result.status).send(JSON.stringify(response));
+    } else {
+      return res.status(constants.SHORTCODE_NOT_FOUND).end();
     }
-    return res.status(constants.SHORTCODE_NOT_FOUND).end();
   }).catch((error) => {
     console.error(error);
     return res.status(constants.SHORTCODE_NOT_FOUND).end();
@@ -116,28 +102,21 @@ function shortenUrl(url, preferentialShortcode) {
   }
   var attemptCode = preferentialShortcode;
   if(ShortenedUrl.isBlank(attemptCode)) {
-    attemptCode = ShortenedUrl.generateShortcode();
-      
-    
+    attemptCode = ShortenedUrl.generateShortcode();    
   }
   return ShortenedUrl.findOne({shortcode: attemptCode}).then((shortenedUrl) => {
-
     return (shortenedUrl == null);
   }).then((attemptCodeIsNotPresent) => {
     if(attemptCodeIsNotPresent) {
-
       return ShortenedUrl.initialize(url, attemptCode).then((shortenedUrl) => {
         if(shortenedUrl) {
           return {status: constants.SHORTEN_URL_CREATED, shortcode: shortenedUrl.shortcode};
-
         }
       })
     }
     return {status: constants.SHORTCODE_ALREADY_USED};
-
   }).catch((error) => {
     console.log(error);
-    console.error("ERROR while saving");
     return {status: constants.SHORTCODE_ALREADY_USED};
   })
 
@@ -145,10 +124,9 @@ function shortenUrl(url, preferentialShortcode) {
 
 
 function retrieveUrl(shortcode) {
-
   if(ShortenedUrl.isShortcodeValid(shortcode)) {
     return retrieveShortenedUrl(shortcode).then((result) => {
-      if(result.status == constants.SHORTCODE_FOUND) {
+      if(result.status == constants.SHORTEN_URL_FOUND) {
         result.shortenedUrl.lastSeenDate = new Date();
         result.shortenedUrl.redirectCount = result.shortenedUrl.redirectCount + 1;
         return result.shortenedUrl.save().then((shortenedUrl) => {
@@ -157,7 +135,6 @@ function retrieveUrl(shortcode) {
       } else {
         return Promise.resolve({status: constants.SHORTCODE_NOT_FOUND});
       }
-
     }).catch((error) => {
       console.error(error);
       return Promise.resolve({status: constants.SHORTCODE_NOT_FOUND});
@@ -165,26 +142,24 @@ function retrieveUrl(shortcode) {
   } else {
     return Promise.resolve({status: constants.SHORTCODE_NOT_FOUND});
   }
-  
-    
 };
 
 
 function retrieveShortenedUrl(shortcode) {
-  console.log("TODO finis qith status constants")
-
   if(ShortenedUrl.isShortcodeValid(shortcode)) {
     return ShortenedUrl.findOne({shortcode: shortcode}).then((shortenedUrl) => {
       if(shortenedUrl) {
-        return shortenedUrl;
+        return {status: constants.SHORTEN_URL_FOUND, shortenedUrl: shortenedUrl};
+      } else {
+        return Promise.resolve({status: constants.SHORTCODE_NOT_FOUND});  
       }
     }).catch((error) => {
       console.error(error);
+      return Promise.resolve({status: constants.SHORTCODE_NOT_FOUND});  
     });  
-  }
-  
-  return Promise.resolve(undefined);  
-    
+  } else {
+    return Promise.resolve({status: constants.SHORTCODE_NOT_FOUND});  
+  } 
 };
 
 

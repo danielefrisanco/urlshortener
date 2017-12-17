@@ -29,8 +29,6 @@ ShortenedUrlSchema.statics.isBlank = function(str) {
 
 ShortenedUrlSchema.statics.generateShortcode = function() {
   console.log("TODO generate unique shortcode even though there are around 51520374361 of permutations possible")
-  // this will make it O(n)
-  // shortid has fixed size, hashis needs a random value to start and doesnt guarantee there are no conflicts, so i just need to check in db for now
   return new RandExp(SHORTCODE_REGEX).gen();
 };
 
@@ -54,9 +52,8 @@ ShortenedUrlSchema.statics.initialize = function(url, shortcode) {
       return null;
     }
   }).catch((error) => {
-    // console.log(error.toJSON());
-    console.error("ERROR while saving1");
-    return null; //{status: 409, message: {"error": "The the desired shortcode is already in use. Shortcodes are case-sensitive."}};
+    console.log(error);
+    return null; 
   })
 
 };
