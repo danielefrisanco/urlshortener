@@ -114,7 +114,7 @@ app.get('/:shortcode/stats', function(req, res) {
 
 function shortenUrl(url, preferentialShortcode) {
   console.log("put this in controller")
-  if((typeof preferentialShortcode === "string") && !ShortenedUrl.isShortcodeValid(preferentialShortcode)) {
+  if(preferentialShortcode && !ShortenedUrl.isShortcodeValid(preferentialShortcode)) {
     return Promise.resolve({status: 422, message: {"error": "The shortcode fails to meet the following regexp:" + ShortenedUrl.getShortcodeRegex()}});
   }
   var attemptCode = preferentialShortcode;

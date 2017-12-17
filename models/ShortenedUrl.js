@@ -20,7 +20,7 @@ console.log("do i still need uniqueValidator?? mongoose-unique-validator");
 
 
 ShortenedUrlSchema.statics.isShortcodeValid = function(shortcode) {
-  return shortcodeRegex.test(shortcode);
+  return (typeof shortcode === "string") && shortcodeRegex.test(shortcode);
 };
 
 ShortenedUrlSchema.statics.isBlank = function(str) {
