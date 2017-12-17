@@ -66,8 +66,8 @@ console.log("explain result: why it was easier for me to return status from the 
 	* @apiError {string}
 	*/
 app.get('/:shortcode', function(req, res) {
-  console.log(req.body)
-  res.send(res);
+  console.log(req.params)
+  res.send();
 
 });
 
@@ -91,7 +91,7 @@ app.get('/:shortcode/stats', function(req, res) {
 function shortenUrl(url, preferentialShortcode) {
   console.log("put this in controller")
   if(preferentialShortcode && !ShortenedUrl.isShortcodeValid(preferentialShortcode)) {
-    return {status: 422, message: {"error": "The shortcode fails to meet the following regexp:" + ShortenedUrlSchema.shortcodeRegex}};
+    return Promise.resolve({status: 422, message: {"error": "The shortcode fails to meet the following regexp:" + ShortenedUrl.getShortcodeRegex()}});
   }
   var attemptCode = preferentialShortcode;
   if(ShortenedUrl.isBlank(attemptCode)) {
