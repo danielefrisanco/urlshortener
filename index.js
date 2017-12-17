@@ -4,22 +4,13 @@ var mongoose = require('mongoose');
 var bodyParser = require('body-parser');
 var path = require('path');
 var http = require('http');
-
+var constants = require('./lib/constants');
 //Models
 var ShortenedUrl = require("./models/ShortenedUrl.js");
 
 mongoose.connect('mongodb://localhost');//.set('debug', true);
 
 var app = express();
-
-const SHORTEN_URL_CREATED = 201,
-  URL_NOT_PRESENT = 400,
-  SHORTCODE_ALREADY_USED = 409,
-  SHORTCODE_NOT_VALID = 422,
-  SHORTCODE_FOUND = 302,
-  SHORTCODE_NOT_FOUND = 404,
-  STATS_FOUND = 200;
-
 
 
 app.use(bodyParser.urlencoded({
@@ -43,23 +34,21 @@ app.post('/shorten', function(req, res) {
   console.log(req.body.url)
   console.log(req.body.shortcode)
   res.setHeader('Content-Type', 'application/json')
-  if(!req.body) {
-  	return res.status(415).end();
-  }
-
-  if(!req.body.url) {
-		return res.status(400).end();
+ 
+  if(!req.body || !req.body.url) {
+		return res.status(constants.URL_NOT_PRESENT).end();
 
   } 
 
  
 
 console.log("explain result: why it was easier for me to return status from the model")
-	shortenUrl(req.body.url, req.body.shortcode).then((result) => {
-	  if(result) {
-	    console.error(result);
-	  	return res.status(result.status).send(JSON.stringify(result.message));
-	  }
+	return shortenUrl(req.body.url, req.body.shortcode).then((result) => {
+    if(result.status == constants.SHORTEN_URL_CREATED) {
+	  	return res.status(result.status).send(JSON.stringify(result.shortcode));
+	  }  
+    return res.status(result.status).end();
+
 		
 	});
 
@@ -79,15 +68,14 @@ console.log("explain result: why it was easier for me to return status from the 
 app.get('/:shortcode', function(req, res) {
   res.setHeader('Content-Type', 'application/json')
 
-  retrieveUrl(req.params.shortcode).then((shortenedUrl) => {
-    if(shortenedUrl) {
-      res.setHeader('Location', shortenedUrl.url);
-      return res.status(302).end();
+  retrieveUrl(req.params.shortcode).then((result) => {
+    if(result.status == constants.SHORTCODE_FOUND) {
+      res.setHeader('Location', result.url);
     }
-    return res.status(404).end();
+    return res.status(result.status).end();
   }).catch((error) => {
     console.error(error);
-    return res.status(404).end();
+    return res.status(constants.SHORTCODE_NOT_FOUND).end();
   });
 
 });
@@ -104,28 +92,27 @@ app.get('/:shortcode', function(req, res) {
 app.get('/:shortcode/stats', function(req, res) {
   res.setHeader('Content-Type', 'application/json')
 
-  retrieveShortenedUrl(req.params.shortcode).then((shortenedUrl) => {
+  retrieveShortenedUrl(req.params.shortcode).then((result) => {
     if(shortenedUrl) {
       var response = {
         "startDate": shortenedUrl.startDate,
         "lastSeenDate": shortenedUrl.lastSeenDate,
         "redirectCount": shortenedUrl.redirectCount
       };
-      return res.status(302).send(JSON.stringify(response));
+      return res.status(constants.STATS_FOUND).send(JSON.stringify(response));
     }
-    return res.status(404).end();
+    return res.status(constants.SHORTCODE_NOT_FOUND).end();
   }).catch((error) => {
     console.error(error);
-    return res.status(404).end();
+    return res.status(constants.SHORTCODE_NOT_FOUND).end();
   });
 });
-
 
 
 function shortenUrl(url, preferentialShortcode) {
   console.log("put this in controller")
   if(preferentialShortcode && !ShortenedUrl.isShortcodeValid(preferentialShortcode)) {
-    return Promise.resolve({status: 422, message: {"error": "The shortcode fails to meet the following regexp:" + ShortenedUrl.getShortcodeRegex()}});
+    return Promise.resolve({status: constants.SHORTCODE_NOT_VALID});
   }
   var attemptCode = preferentialShortcode;
   if(ShortenedUrl.isBlank(attemptCode)) {
@@ -141,102 +128,64 @@ function shortenUrl(url, preferentialShortcode) {
 
       return ShortenedUrl.initialize(url, attemptCode).then((shortenedUrl) => {
         if(shortenedUrl) {
-          return {status: 201, message: {"shortcode": shortenedUrl.shortcode}};
+          return {status: constants.SHORTEN_URL_CREATED, shortcode: shortenedUrl.shortcode};
 
         }
       })
     }
-    return {status: 409, message: {"error": "The the desired shortcode is already in use. Shortcodes are case-sensitive."}};
+    return {status: constants.SHORTCODE_ALREADY_USED};
 
   }).catch((error) => {
     console.log(error);
     console.error("ERROR while saving");
-    return {status: 409, message: {"error": "The the desired shortcode is already in use. Shortcodes are case-sensitive."}};
+    return {status: constants.SHORTCODE_ALREADY_USED};
   })
 
 };
 
 
-
-
-
-
-
-
-
-
-
 function retrieveUrl(shortcode) {
 
   if(ShortenedUrl.isShortcodeValid(shortcode)) {
-    return retrieveShortenedUrl(shortcode).then((shortenedUrl) => {
-      if(shortenedUrl) {
-        shortenedUrl.lastSeenDate = new Date();
-        shortenedUrl.redirectCount = shortenedUrl.redirectCount + 1;
-        return shortenedUrl.save();
+    return retrieveShortenedUrl(shortcode).then((result) => {
+      if(result.status == constants.SHORTCODE_FOUND) {
+        result.shortenedUrl.lastSeenDate = new Date();
+        result.shortenedUrl.redirectCount = result.shortenedUrl.redirectCount + 1;
+        return result.shortenedUrl.save().then((shortenedUrl) => {
+          return {status: constants.SHORTCODE_FOUND, url: shortenedUrl.url};
+        });
       } else {
-        return Promise.resolve(undefined);
+        return Promise.resolve({status: constants.SHORTCODE_NOT_FOUND});
       }
-    // }).then((shortenedUrl) => {
-    //   if(shortenedUrl) {
-    //     return {status: 302, message: {"url": shortenedUrl.url}};
-    //   // } else {
-    //   //   console.error("not found");
-    //   //   return {status: 404, message: {"error": "The shortcode cannot be found in the system"}};
-    //   }
 
     }).catch((error) => {
       console.error(error);
-      // return {status: 404, message: {"error": "The shortcode cannot be found in the system"}};
+      return Promise.resolve({status: constants.SHORTCODE_NOT_FOUND});
     });  
-  // } else {
-  //   console.log("retrieveUrlretrieveUrlssss")
-  //   return {status: 404, message: {"error": "The shortcode cannot be found in the system"}};  
+  } else {
+    return Promise.resolve({status: constants.SHORTCODE_NOT_FOUND});
   }
   
-        return Promise.resolve(undefined);
-  // return Promise.resolve({status: 404, message: {"error": "The shortcode cannot be found in the system"}});  
     
 };
 
 
-
-
-
-
-
-
 function retrieveShortenedUrl(shortcode) {
+  console.log("TODO finis qith status constants")
 
   if(ShortenedUrl.isShortcodeValid(shortcode)) {
     return ShortenedUrl.findOne({shortcode: shortcode}).then((shortenedUrl) => {
       if(shortenedUrl) {
         return shortenedUrl;
-      // } else {
-      //   console.error("not found");
-      //   return {status: 404, message: {"error": "The shortcode cannot be found in the system"}};
       }
-
     }).catch((error) => {
       console.error(error);
-      // return {status: 404, message: {"error": "The shortcode cannot be found in the system"}};
     });  
-  // } else {
-  //   console.log("retrieveUrlretrieveUrlssss")
-  //   return {status: 404, message: {"error": "The shortcode cannot be found in the system"}};  
   }
   
   return Promise.resolve(undefined);  
     
 };
-
-
-
-
-
-
-
-
 
 
 app.listen(8080);
