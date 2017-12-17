@@ -165,3 +165,4 @@ function retrieveShortenedUrl(shortcode) {
 
 app.listen(8080);
 app.use(express.static(path.join(__dirname, 'static')));
+module.exports = app;
