@@ -116,6 +116,10 @@ function isBlank(str) {
 
 function shortenUrl(url, preferentialShortcode) {
   console.log("put this in controller")
+
+  if(!isBlank(preferentialShortcode) && !ShortenedUrl.validateShortcode(preferentialShortcode)) {
+    return Promise.resolve({status: constants.SHORTCODE_NOT_VALID});
+  }
   var attemptCode = preferentialShortcode;
   if(isBlank(attemptCode)) {
     attemptCode = ShortenedUrl.generateShortcode();    

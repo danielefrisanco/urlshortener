@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "test": "mocha test/**.js"
+    "test": "mocha test/**.js --exit"
   },
   "author": "daniele frisanco",
   "license": "ISC",

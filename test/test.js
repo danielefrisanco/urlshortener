@@ -23,5 +23,11 @@ describe('ShortenedUrl module', () => {
     })
   })
 
+  describe('"validateShortcode"', () => {
+    it('should export a function', () => {
+      expect(ShortenedUrl.validateShortcode).to.be.a('function')
+    })
+  })
+
 
 })

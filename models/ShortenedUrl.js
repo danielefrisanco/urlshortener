@@ -6,7 +6,7 @@ var uniqueValidator = require('mongoose-unique-validator');
 mongoose.Promise = global.Promise;
 
 const SHORTCODE_REGEX = /^[0-9a-zA-Z_]{6}$/;
-
+const MINIMUM_SHORTCODE_REGEX = /^[0-9a-zA-Z_]{4,}$/;
 var ShortenedUrlSchema = new mongoose.Schema({
   id: mongoose.Schema.ObjectId,
   url: {type: String, index: true, validate: /^(?!\s*$).+/},
@@ -18,6 +18,10 @@ var ShortenedUrlSchema = new mongoose.Schema({
 ShortenedUrlSchema.plugin(uniqueValidator);
 console.log("do i still need uniqueValidator?? mongoose-unique-validator");
 
+
+ShortenedUrlSchema.statics.validateShortcode = function(shortcode) {
+  return MINIMUM_SHORTCODE_REGEX.test(shortcode);
+};
 
 ShortenedUrlSchema.statics.generateShortcode = function() {
   console.log("TODO generate unique shortcode even though there are around 51520374361 of permutations possible")
