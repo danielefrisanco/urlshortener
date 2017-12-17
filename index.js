@@ -44,7 +44,7 @@ app.post('/shorten', function(req, res) {
  
 
 console.log("explain result: why it was easier for me to return status from the model")
-	ShortenedUrl.shortenUrl(req.body.url, req.body.shortcode).then((result) => {
+	shortenUrl(req.body.url, req.body.shortcode).then((result) => {
 	  if(result) {
 	    console.error(result);
 	  	return res.status(result.status).send(JSON.stringify(result.message));
@@ -95,33 +95,31 @@ function shortenUrl(url, preferentialShortcode) {
   }
   var attemptCode = preferentialShortcode;
   if(ShortenedUrl.isBlank(attemptCode)) {
-    var attemptCodeAlreadyPresent = false;
-    do {
-      attemptCode = ShortenedUrl.generateShortcode();
-      console.log(attemptCode)
-      attemptCodeAlreadyPresent = ShortenedUrl.findOne({shortcode: attemptCode}).then((shortenedUrl) => {
-      console.log("AAAAAAshortenedUrl")
-      console.log(shortenedUrl)
-        return (!!shortenedUrl);
-      }).catch((err) => {
-      	console.log(err)
-      	return true;
-      })
-    } while(attemptCodeAlreadyPresent);
+    attemptCode = ShortenedUrl.generateShortcode();
+      
+    
   }
+  return ShortenedUrl.findOne({shortcode: attemptCode}).then((shortenedUrl) => {
 
-  return ShortenedUrl.initialize(url, attemptCode).then((shortenedUrl) => {
-    if(shortenedUrl) {
-      return {status: 201, message: {"shortcode": shortenedUrl.shortcode}};
-    } else {
-      return {status: 409, message: {"error": "The the desired shortcode is already in use. Shortcodes are case-sensitive."}};
+    return (shortenedUrl == null);
+  }).then((attemptCodeIsNotPresent) => {
+    if(attemptCodeIsNotPresent) {
+
+      return ShortenedUrl.initialize(url, attemptCode).then((shortenedUrl) => {
+        if(shortenedUrl) {
+          return {status: 201, message: {"shortcode": shortenedUrl.shortcode}};
+
+        }
+      })
     }
+    return {status: 409, message: {"error": "The the desired shortcode is already in use. Shortcodes are case-sensitive."}};
+
   }).catch((error) => {
-    // console.log(error.toJSON());
+    console.log(error);
     console.error("ERROR while saving");
     return {status: 409, message: {"error": "The the desired shortcode is already in use. Shortcodes are case-sensitive."}};
   })
-  
+
 };
 
 

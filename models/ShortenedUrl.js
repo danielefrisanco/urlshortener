@@ -56,7 +56,7 @@ ShortenedUrlSchema.statics.initialize = function(url, shortcode) {
   var now = Date.now();
   var shortenedUrl = new this({
     url: url,
-    shortcode: attemptCode,
+    shortcode: shortcode,
     startDate: now,
     lastSeenDate: now,
     redirectCount: 0
@@ -64,14 +64,14 @@ ShortenedUrlSchema.statics.initialize = function(url, shortcode) {
 
   return shortenedUrl.save().then((result) => {
     if(result) {
-      return {status: 201, message: {"shortcode": result.shortcode}};
+      return result;
     } else {
-      return {status: 409, message: {"error": "The the desired shortcode is already in use. Shortcodes are case-sensitive."}};
+      return null;
     }
   }).catch((error) => {
     // console.log(error.toJSON());
-    console.error("ERROR while saving");
-    return {status: 409, message: {"error": "The the desired shortcode is already in use. Shortcodes are case-sensitive."}};
+    console.error("ERROR while saving1");
+    return null; //{status: 409, message: {"error": "The the desired shortcode is already in use. Shortcodes are case-sensitive."}};
   })
 
 };
@@ -107,40 +107,40 @@ ShortenedUrlSchema.statics.shortenUrl = function(url, preferentialShortcode) {
 
 
    
-  if(preferentialShortcode && !isShortcodeValid(preferentialShortcode)) {
-    return {status: 422, message: {"error": "The shortcode fails to meet the following regexp:" + shortcodeRegex}};
-  }
-  var now = Date.now();
-  var attemptCode = preferentialShortcode;
-  if(isBlank(attemptCode)) {
-    var attemptCodeAlreadyPresent = false;
-    do {
-      attemptCode = generateShortcode();
-      attemptCodeAlreadyPresent = this.retrieveUrl(attemptCode).then((result) => {
-console.log(result)
-        return (result && result.status == 302);
-      });
-    } while(attemptCodeAlreadyPresent);
-  }
-  var shortenedUrl = new this({
-    url: url,
-    shortcode: attemptCode,
-    startDate: now,
-    lastSeenDate: now,
-    redirectCount: 0
-  });
+//   if(preferentialShortcode && !isShortcodeValid(preferentialShortcode)) {
+//     return {status: 422, message: {"error": "The shortcode fails to meet the following regexp:" + shortcodeRegex}};
+//   }
+//   var now = Date.now();
+//   var attemptCode = preferentialShortcode;
+//   if(isBlank(attemptCode)) {
+//     var attemptCodeAlreadyPresent = false;
+//     do {
+//       attemptCode = generateShortcode();
+//       attemptCodeAlreadyPresent = this.retrieveUrl(attemptCode).then((result) => {
+// console.log(result)
+//         return (result && result.status == 302);
+//       });
+//     } while(attemptCodeAlreadyPresent);
+//   }
+//   var shortenedUrl = new this({
+//     url: url,
+//     shortcode: attemptCode,
+//     startDate: now,
+//     lastSeenDate: now,
+//     redirectCount: 0
+//   });
 
-  return shortenedUrl.save().then((result) => {
-    if(result) {
-      return {status: 201, message: {"shortcode": result.shortcode}};
-    } else {
-      return {status: 409, message: {"error": "The the desired shortcode is already in use. Shortcodes are case-sensitive."}};
-    }
-  }).catch((error) => {
-    // console.log(error.toJSON());
-    console.error("ERROR while saving");
-    return {status: 409, message: {"error": "The the desired shortcode is already in use. Shortcodes are case-sensitive."}};
-  })
+//   return shortenedUrl.save().then((result) => {
+//     if(result) {
+//       return {status: 201, message: {"shortcode": result.shortcode}};
+//     } else {
+//       return {status: 409, message: {"error": "The the desired shortcode is already in use. Shortcodes are case-sensitive."}};
+//     }
+//   }).catch((error) => {
+//     // console.log(error.toJSON());
+//     console.error("ERROR while saving");
+//     return {status: 409, message: {"error": "The the desired shortcode is already in use. Shortcodes are case-sensitive."}};
+//   })
   
 };
 
