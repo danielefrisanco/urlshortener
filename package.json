@@ -4,7 +4,7 @@
   "description": "url shortener",
   "main": "index.js",
   "scripts": {
-    "test": "mocha lib/**/**.spec.js"
+    "test": "mocha test/**.js"
   },
   "author": "daniele frisanco",
   "license": "ISC",
