@@ -158,39 +158,39 @@ ShortenedUrlSchema.statics.shortenUrl = function(url, preferentialShortcode) {
 
 
 
-ShortenedUrlSchema.statics.retrieveUrl = function(shortcode) {
-  console.log("retrieveUrl:", shortcode);
+// ShortenedUrlSchema.statics.retrieveUrl = function(shortcode) {
+//   console.log("retrieveUrl:", shortcode);
 
-  if(!isShortcodeValid(shortcode)) {
+//   if(!isShortcodeValid(shortcode)) {
 
-    console.error("shortcode not valid");
-    return {status: 1, message: {"url": ""}};
+//     console.error("shortcode not valid");
+//     return {status: 1, message: {"url": ""}};
 
-  }
+//   }
 
-  if(shortcode) {
-    console.log("retrieveUrlretrieveUrl",shortcode)
-    console.log("retrieveUrlretrieveUrl2",this)
-    return this.findOne({shortcode: shortcode}).then((shortenedUrl) => {
-      console.log(shortenedUrl)
-      if(shortenedUrl) {
-        console.log(shortenedUrl);
-        return {status: 302, message: {"url": shortenedUrl.url}};
-      } else {
-        console.error("not found");
-        return {status: 1, message: {"url": ""}};
-      }
+//   if(shortcode) {
+//     console.log("retrieveUrlretrieveUrl",shortcode)
+//     console.log("retrieveUrlretrieveUrl2",this)
+//     return this.findOne({shortcode: shortcode}).then((shortenedUrl) => {
+//       console.log(shortenedUrl)
+//       if(shortenedUrl) {
+//         console.log(shortenedUrl);
+//         return {status: 302, message: {"url": shortenedUrl.url}};
+//       } else {
+//         console.error("not found");
+//         return {status: 1, message: {"url": ""}};
+//       }
 
-    }).catch((error) => {
-      console.error(error);
-      return {status: 1, message: {"url": ""}};
-    });  
-  } else {
-    console.log("retrieveUrlretrieveUrlssss")
-    return {status: 1, message: {"url": ""}};  
-  }
+//     }).catch((error) => {
+//       console.error(error);
+//       return {status: 1, message: {"url": ""}};
+//     });  
+//   } else {
+//     console.log("retrieveUrlretrieveUrlssss")
+//     return {status: 1, message: {"url": ""}};  
+//   }
   
-};
+// };
 
 ShortenedUrlSchema.statics.retrieveStats = function(shortcode) {
 };

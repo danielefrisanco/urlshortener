@@ -50,7 +50,7 @@ console.log("explain result: why it was easier for me to return status from the 
 	  	return res.status(result.status).send(JSON.stringify(result.message));
 	  }
 		
-	})
+	});
 
 	// return res.status(201).send(JSON.stringify({result}));
 
@@ -67,7 +67,12 @@ console.log("explain result: why it was easier for me to return status from the 
 	*/
 app.get('/:shortcode', function(req, res) {
   console.log(req.params)
-  res.send();
+  retrieveUrl(req.params.shortcode).then((result) => {
+    if(result) {
+      console.error(result);
+      return res.status(result.status).send(JSON.stringify(result.message));
+    }
+  });
 
 });
 
@@ -121,6 +126,56 @@ function shortenUrl(url, preferentialShortcode) {
   })
 
 };
+
+
+
+
+
+
+
+
+
+
+
+function retrieveUrl(shortcode) {
+  console.log("retrieveUrl:", shortcode);
+
+  if(!ShortenedUrl.isShortcodeValid(shortcode)) {
+
+    console.error("shortcode not valid");
+    return {status: 404, message: {"error": "The shortcode cannot be found in the system"}};
+
+  }
+
+  if(shortcode) {
+    return ShortenedUrl.findOne({shortcode: shortcode}).then((shortenedUrl) => {
+      if(shortenedUrl) {
+        return {status: 302, message: {"url": shortenedUrl.url}};
+      // } else {
+      //   console.error("not found");
+      //   return {status: 404, message: {"error": "The shortcode cannot be found in the system"}};
+      }
+
+    }).catch((error) => {
+      console.error(error);
+      // return {status: 404, message: {"error": "The shortcode cannot be found in the system"}};
+    });  
+  // } else {
+  //   console.log("retrieveUrlretrieveUrlssss")
+  //   return {status: 404, message: {"error": "The shortcode cannot be found in the system"}};  
+  }
+  
+    return {status: 404, message: {"error": "The shortcode cannot be found in the system"}};  
+
+};
+
+
+
+
+
+
+
+
 
 
 app.listen(8080);
