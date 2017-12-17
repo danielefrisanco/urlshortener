@@ -1,4 +1,3 @@
-
 var express = require('express');
 var mongoose = require('mongoose');
 var bodyParser = require('body-parser');
@@ -7,10 +6,26 @@ var http = require('http');
 var constants = require('./lib/constants');
 //Models
 var ShortenedUrl = require("./models/ShortenedUrl.js");
+var config = {};
 
-mongoose.connect('mongodb://localhost');//.set('debug', true);
-
+config.mongoURI = {
+  development: 'mongodb://localhost/shorty-dev',
+  test: 'mongodb://localhost/shorty-dev'
+};
 var app = express();
+
+// module.exports = config;
+console.log("fix env test/ ddev")
+console.log(app.settings.env )
+mongoose.connect(config.mongoURI[app.settings.env], function(err, res) {
+  if(err) {
+    console.log('Error connecting to the database. ' + err);
+  } else {
+    console.log('Connected to Database: ' + config.mongoURI[app.settings.env]);
+  }
+});
+// mongoose.connect('mongodb://localhost');//.set('debug', true);
+
 
 
 app.use(bodyParser.urlencoded({
@@ -32,7 +47,7 @@ console.log("make sure it is a json")
 app.post('/shorten', function(req, res) {
   res.setHeader('Content-Type', 'application/json')
  
-  if(!req.body || !req.body.url) {
+  if(!req.body || !req.body.url || isBlank(req.body.url)) {
 		return res.status(constants.URL_NOT_PRESENT).end();
   }
 	return shortenUrl(req.body.url, req.body.shortcode).then((result) => {
@@ -95,13 +110,14 @@ app.get('/:shortcode/stats', function(req, res) {
 });
 
 
+function isBlank(str) {
+  return (str == undefined || str == null || str.replace(/\s/g, '') == '') 
+};
+
 function shortenUrl(url, preferentialShortcode) {
   console.log("put this in controller")
-  if(preferentialShortcode && !ShortenedUrl.isShortcodeValid(preferentialShortcode)) {
-    return Promise.resolve({status: constants.SHORTCODE_NOT_VALID});
-  }
   var attemptCode = preferentialShortcode;
-  if(ShortenedUrl.isBlank(attemptCode)) {
+  if(isBlank(attemptCode)) {
     attemptCode = ShortenedUrl.generateShortcode();    
   }
   return ShortenedUrl.findOne({shortcode: attemptCode}).then((shortenedUrl) => {
@@ -124,42 +140,34 @@ function shortenUrl(url, preferentialShortcode) {
 
 
 function retrieveUrl(shortcode) {
-  if(ShortenedUrl.isShortcodeValid(shortcode)) {
-    return retrieveShortenedUrl(shortcode).then((result) => {
-      if(result.status == constants.SHORTEN_URL_FOUND) {
-        result.shortenedUrl.lastSeenDate = new Date();
-        result.shortenedUrl.redirectCount = result.shortenedUrl.redirectCount + 1;
-        return result.shortenedUrl.save().then((shortenedUrl) => {
-          return {status: constants.SHORTCODE_FOUND, url: shortenedUrl.url};
-        });
-      } else {
-        return Promise.resolve({status: constants.SHORTCODE_NOT_FOUND});
-      }
-    }).catch((error) => {
-      console.error(error);
+  return retrieveShortenedUrl(shortcode).then((result) => {
+    if(result.status == constants.SHORTEN_URL_FOUND) {
+      result.shortenedUrl.lastSeenDate = new Date();
+      result.shortenedUrl.redirectCount = result.shortenedUrl.redirectCount + 1;
+      return result.shortenedUrl.save().then((shortenedUrl) => {
+        return {status: constants.SHORTCODE_FOUND, url: shortenedUrl.url};
+      });
+    } else {
       return Promise.resolve({status: constants.SHORTCODE_NOT_FOUND});
-    });  
-  } else {
+    }
+  }).catch((error) => {
+    console.error(error);
     return Promise.resolve({status: constants.SHORTCODE_NOT_FOUND});
-  }
+  });  
 };
 
 
 function retrieveShortenedUrl(shortcode) {
-  if(ShortenedUrl.isShortcodeValid(shortcode)) {
-    return ShortenedUrl.findOne({shortcode: shortcode}).then((shortenedUrl) => {
-      if(shortenedUrl) {
-        return {status: constants.SHORTEN_URL_FOUND, shortenedUrl: shortenedUrl};
-      } else {
-        return Promise.resolve({status: constants.SHORTCODE_NOT_FOUND});  
-      }
-    }).catch((error) => {
-      console.error(error);
+  return ShortenedUrl.findOne({shortcode: shortcode}).then((shortenedUrl) => {
+    if(shortenedUrl) {
+      return {status: constants.SHORTEN_URL_FOUND, shortenedUrl: shortenedUrl};
+    } else {
       return Promise.resolve({status: constants.SHORTCODE_NOT_FOUND});  
-    });  
-  } else {
+    }
+  }).catch((error) => {
+    console.error(error);
     return Promise.resolve({status: constants.SHORTCODE_NOT_FOUND});  
-  } 
+  });  
 };
 
 

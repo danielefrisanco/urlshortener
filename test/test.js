@@ -24,16 +24,4 @@ describe('ShortenedUrl module', () => {
   })
 
 
-  describe('"isBlank"', () => {
-    it('should export a function', () => {
-      expect(ShortenedUrl.isBlank).to.be.a('function')
-    })
-  })
-
-
-  describe('"isShortcodeValid"', () => {
-    it('should export a function', () => {
-      expect(ShortenedUrl.isShortcodeValid).to.be.a('function')
-    })
-  })
 })

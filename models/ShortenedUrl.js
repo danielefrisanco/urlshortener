@@ -10,7 +10,7 @@ const SHORTCODE_REGEX = /^[0-9a-zA-Z_]{6}$/;
 var ShortenedUrlSchema = new mongoose.Schema({
   id: mongoose.Schema.ObjectId,
   url: {type: String, index: true, validate: /^(?!\s*$).+/},
-  shortcode: {type: String, index: true, unique: true, validate: SHORTCODE_REGEX},
+  shortcode: {type: String, index: true, unique: true},
   startDate: Schema.Types.Mixed,
   lastSeenDate: Schema.Types.Mixed,
   redirectCount: {type: Number, default: 0}
@@ -18,14 +18,6 @@ var ShortenedUrlSchema = new mongoose.Schema({
 ShortenedUrlSchema.plugin(uniqueValidator);
 console.log("do i still need uniqueValidator?? mongoose-unique-validator");
 
-
-ShortenedUrlSchema.statics.isShortcodeValid = function(shortcode) {
-  return (typeof shortcode === "string") && SHORTCODE_REGEX.test(shortcode);
-};
-
-ShortenedUrlSchema.statics.isBlank = function(str) {
-  return (str == undefined || str == null || str.replace(/\s/g, '') == '') 
-};
 
 ShortenedUrlSchema.statics.generateShortcode = function() {
   console.log("TODO generate unique shortcode even though there are around 51520374361 of permutations possible")
