@@ -28,31 +28,30 @@ ShortenedUrlSchema.statics.generateShortcode = function() {
 
 
 ShortenedUrlSchema.statics.initialize = function(url, shortcode) {
+  if(url && this.validateShortcode(shortcode)) {
+    var now = new Date();
+    var shortenedUrl = new this({
+      url: url,
+      shortcode: shortcode,
+      startDate: now,
+      lastSeenDate: now,
+      redirectCount: 0
+    });
   
-  var now = new Date();
-  var shortenedUrl = new this({
-    url: url,
-    shortcode: shortcode,
-    startDate: now,
-    lastSeenDate: now,
-    redirectCount: 0
-  });
-
-  return shortenedUrl.save().then((result) => {
-    if(result) {
-      return result;
-    } else {
-      return null;
-    }
-  }).catch((error) => {
-    console.log(error);
-    return null; 
-  })
+    return shortenedUrl.save().then((result) => {
+      if(result) {
+        return result;
+      } else {
+        return Promise.resolve(null);
+      }
+    }).catch((error) => {
+      console.log(error);
+      return null; 
+    })
+  } else { 
+    return Promise.resolve(null);
+  }
 
 };
-
-ShortenedUrlSchema.statics.getShortcodeRegex = function() {
-  return SHORTCODE_REGEX;
-}
 
 module.exports = mongoose.model('ShortenedUrl', ShortenedUrlSchema);

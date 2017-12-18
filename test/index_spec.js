@@ -10,33 +10,26 @@ chai.use(chaiHttp);
 
   var db = new ShortenedUrl
 describe('App', function() {
-	// 	console.log("TODO clean database")
-//   beforeEach(function() {
-//   return db.clear()
-//     .then(function() {
-//       // return db.save();
-//     });
-// });
 
-beforeEach(function (done) {
+  beforeEach(function (done) {
 
-  function clearDB() {
-    ShortenedUrl.remove().exec().then(function () {
-      done();
-    });
-  };
+    function clearDB() {
+      ShortenedUrl.remove().exec().then(function () {
+        done();
+      });
+    };
 
-  if(mongoose.connection.readyState === 0) {
-    mongoose.connect(config.dbUrl, function(err) {
-      if(err) {
-        throw err;
-      }
+    if(mongoose.connection.readyState === 0) {
+      mongoose.connect(config.dbUrl, function(err) {
+        if(err) {
+          throw err;
+        }
+        return clearDB();
+      });
+    } else {
       return clearDB();
-    });
-  } else {
-    return clearDB();
-  }
-});
+    }
+  });
 
   describe('/shorten', function() {
     it('responds with status 201 when a desired shortcode is not present ', function(done) {
