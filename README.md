@@ -1,8 +1,8 @@
-with mongodb running
+run with 
+docker-compose up
 
-to run the app on localhost and port 8080:
-npm start
+ 
 
-to test:
+to test with mongo running:
 npm test
 
