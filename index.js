@@ -8,8 +8,8 @@ var ShortenedUrl = require("./models/ShortenedUrl.js");
 var config = {};
 
 config.mongoURI = {
-  development: 'mongodb://localhost/shorty-dev',
-  test: 'mongodb://localhost/shorty-test'
+  development: 'mongodb://mongo/shorty-dev',
+  test: 'mongodb://mongo/shorty-test'
 };
 var app = express();
 

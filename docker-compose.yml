@@ -1,16 +1,18 @@
 version: '2.1'
 services:
-  shorty:
-    build: .
-    # command: npm start
-    ports:
-      - 8080:8080
-    links:
-      - mongo
-    depends_on:
-      - mongo
-    command: npm start
+
   mongo:
-    image: mongo
-    volumes:
-      - /data/db
+    image: mongo:2.6.11
+    ports:
+     - "27017:27017"
+  application:
+    build: .
+    command:  npm start
+    ports:
+     - "8080:8080"
+    volumes :
+    - ./:/app
+    links:
+     - mongo
+
+

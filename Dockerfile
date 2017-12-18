@@ -1,18 +1,10 @@
-#FROM mongo:3.2.10
+FROM node
+EXPOSE 8080
+COPY . /app
+WORKDIR /app
 
-#create DB directory
-#RUN mkdir -p /data/db
-#EXPOSE 27017
+RUN cd /app; npm install
+CMD ["node", "index.js"]
 
-#CMD ["mongod"]
 
-FROM node:4.5.0
 
-WORKDIR /usr/app
-
-COPY package.json .
-COPY . /usr/app
-RUN npm install --quiet
-
-#CMD ["node", "index.js"]
-#RUN npm start
