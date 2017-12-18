@@ -12,3 +12,5 @@ services:
     command: npm start
   mongo:
     image: mongo
+    volumes:
+      - /data/db

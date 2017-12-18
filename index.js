@@ -4,22 +4,24 @@ var bodyParser = require('body-parser');
 var path = require('path');
 var http = require('http');
 var constants = require('./lib/constants');
-//Models
 var ShortenedUrl = require("./models/ShortenedUrl.js");
 var config = {};
 
 config.mongoURI = {
   development: 'mongodb://localhost/shorty-dev',
-  test: 'mongodb://localhost/shorty-dev'
+  test: 'mongodb://localhost/shorty-test'
 };
 var app = express();
 
-// module.exports = config;
-console.log("fix env test/ ddev")
 console.log(app.settings.env )
 mongoose.connect(
   config.mongoURI[app.settings.env],
-  {useMongoClient: true}
+  {
+    useMongoClient: true,
+    socketTimeoutMS: 0,
+    keepAlive: true,
+    reconnectTries: 30
+  }
 ).then((db) => {
   console.log('Connected to database');
 
@@ -156,6 +158,7 @@ mongoose.connect(
 
   function retrieveShortenedUrl(shortcode) {
     return ShortenedUrl.findOne({shortcode: shortcode}).then((shortenedUrl) => {
+      
       if(shortenedUrl) {
         return {status: constants.SHORTEN_URL_FOUND, shortenedUrl: shortenedUrl};
       } else {
@@ -170,7 +173,8 @@ mongoose.connect(
 
   app.listen(8080);
   app.use(express.static(path.join(__dirname, 'static')));
-  module.exports = app;
+  
 }).catch((error) => {
   console.error(error);
 });  
+module.exports = app;

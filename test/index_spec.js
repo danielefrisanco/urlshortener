@@ -1,16 +1,43 @@
-
+process.env.NODE_ENV = 'test';
 var chai = require('chai');
 var chaiHttp = require('chai-http');
+var mongoose = require('mongoose');
 var app = require('../index');
-// app.settings.env = 'test';
+var ShortenedUrl = require("../models/ShortenedUrl.js");
 console.log("fix env test/ ddev, clear db, put preare values in db")
 var expect = chai.expect;
 chai.use(chaiHttp);
 
+  var db = new ShortenedUrl
 describe('App', function() {
-	// before(function(done) {
 	// 	console.log("TODO clean database")
-	// });
+//   beforeEach(function() {
+//   return db.clear()
+//     .then(function() {
+//       // return db.save();
+//     });
+// });
+
+beforeEach(function (done) {
+
+  function clearDB() {
+    ShortenedUrl.remove().exec().then(function () {
+      done();
+    });
+  };
+
+  if(mongoose.connection.readyState === 0) {
+    mongoose.connect(config.dbUrl, function(err) {
+      if(err) {
+        throw err;
+      }
+      return clearDB();
+    });
+  } else {
+    return clearDB();
+  }
+});
+
   describe('/shorten', function() {
     it('responds with status 201 when a desired shortcode is not present ', function(done) {
       chai.request(app)
@@ -18,13 +45,13 @@ describe('App', function() {
         .send({ url: 'http://example.com/', shortcode: "example" })
         .end(function(err, res) {
           console.log("must cleaan db")
-          done();
 
         	expect(res).to.be.json;
           expect(res).to.have.status(201);
           expect(res).to.have.own.property("body");
-          expect(res.body).to.be.a("string");
-          expect(res.body).to.match(/example/);
+          expect(res.body).to.have.nested.property("shortcode");
+          expect(res.body.shortcode).to.be.a("string");
+          expect(res.body.shortcode).to.match(/example/);
           done();
         });
     });
@@ -40,8 +67,6 @@ describe('App', function() {
 	      		.send({ url: 'http://example.com/', shortcode: "Case_sensitive" })
 	          .end(function(err, res) {
           console.error("must clean db")
-
-	            done();
 
 	            expect(res).to.have.status(201);
 	            expect(res.body).to.equal('Case_sensitive');
@@ -103,7 +128,6 @@ describe('App', function() {
 	          .end(function(err, res) {
           console.error("must clean db")
 
-	            done();
 
 	            expect(res).to.have.status(409);
 	            done();
@@ -139,19 +163,31 @@ describe('App', function() {
 
 
   describe('/:shortcode', function() {
+
+    beforeEach(function (done) {
+ 
+      var now = new Date();
+      var shortenedUrl = new ShortenedUrl({
+        url: "http://example.com/",
+        shortcode: "example",
+        startDate: now,
+        lastSeenDate: now,
+        redirectCount: 0
+      });
+
+      shortenedUrl.save().then(() => {
+        done();
+      });
+
+ 
+    });
     it('responds with status 302 when shortcode is found', function(done) {
+
       chai.request(app)
         .get('/example')
         .end(function(err, res) {
-
-
-        	console.log(res)
-          // expect(res.statusCode).to.equal(302);
-          // expect(res).to.have.status(302);
-          // TODO chai is problematic with redirects
           expect(res.redirects[0]).to.equal("http://example.com/");
 
-          console.log("check redirecCount is increased");
           done();
         });
     });
@@ -170,6 +206,23 @@ describe('App', function() {
 
   describe('/:shortcode/stats', function() {
     
+    beforeEach(function (done) {
+ 
+      var now = new Date();
+      var shortenedUrl = new ShortenedUrl({
+        url: "http://example.com/",
+        shortcode: "example",
+        startDate: now,
+        lastSeenDate: now,
+        redirectCount: 0
+      });
+
+      shortenedUrl.save().then(() => {
+        done();
+      });
+
+ 
+    });
 		it('responds with status 200 when shortcode is found with the stats', function(done) {
       chai.request(app)
         .get('/example/stats')
@@ -183,7 +236,7 @@ describe('App', function() {
           expect(Date.parse(res.body.startDate)).to.not.be.equal(NaN);
           expect(Date.parse(res.body.lastSeenDate)).to.not.be.equal(NaN);
           expect(parseInt(res.body.redirectCount)).to.not.be.equal(NaN);
-          //TODO check the values are right
+          expect(parseInt(res.body.redirectCount)).to.be.equal(0);
           console.log("TODO are vualeus correct?")
           done();
         });
