@@ -4,7 +4,6 @@ var chaiHttp = require('chai-http');
 var mongoose = require('mongoose');
 var app = require('../index');
 var ShortenedUrl = require("../models/ShortenedUrl.js");
-console.log("fix env test/ ddev, clear db, put preare values in db")
 var expect = chai.expect;
 chai.use(chaiHttp);
 
@@ -37,7 +36,6 @@ describe('App', function() {
         .post('/shorten')
         .send({ url: 'http://example.com/', shortcode: "example" })
         .end(function(err, res) {
-          console.log("must cleaan db")
 
         	expect(res).to.be.json;
           expect(res).to.have.status(201);
@@ -230,7 +228,6 @@ describe('App', function() {
           expect(Date.parse(res.body.lastSeenDate)).to.not.be.equal(NaN);
           expect(parseInt(res.body.redirectCount)).to.not.be.equal(NaN);
           expect(parseInt(res.body.redirectCount)).to.be.equal(0);
-          console.log("TODO are vualeus correct?")
           done();
         });
     });

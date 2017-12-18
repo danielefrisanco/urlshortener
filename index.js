@@ -13,7 +13,6 @@ config.mongoURI = {
 };
 var app = express();
 
-console.log(app.settings.env )
 mongoose.connect(
   config.mongoURI[app.settings.env],
   {
@@ -131,7 +130,7 @@ mongoose.connect(
       }
       return {status: constants.SHORTCODE_ALREADY_USED};
     }).catch((error) => {
-      console.log(error);
+      // console.log(error);
       return {status: constants.SHORTCODE_ALREADY_USED};
     })
 
