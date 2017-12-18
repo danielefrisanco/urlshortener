@@ -9,7 +9,7 @@ var config = {};
 
 config.mongoURI = {
   development: 'mongodb://mongo/shorty-dev',
-  test: 'mongodb://localhost/shorty-test'
+  test: 'mongodb://mongo/shorty-test'
 };
 var app = express();
 

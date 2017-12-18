@@ -3,6 +3,6 @@ docker-compose up
 
  
 
-to test with mongo running:
-npm test
+to test :
+docker-compose -f ./docker-compose-test.yml up
 
