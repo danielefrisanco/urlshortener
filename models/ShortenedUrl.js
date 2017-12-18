@@ -15,19 +15,16 @@ var ShortenedUrlSchema = new mongoose.Schema({
   lastSeenDate: Schema.Types.Mixed,
   redirectCount: {type: Number, default: 0}
 });
-ShortenedUrlSchema.plugin(uniqueValidator);
-console.log("do i still need uniqueValidator?? mongoose-unique-validator");
 
+ShortenedUrlSchema.plugin(uniqueValidator);
 
 ShortenedUrlSchema.statics.validateShortcode = function(shortcode) {
   return MINIMUM_SHORTCODE_REGEX.test(shortcode);
 };
 
 ShortenedUrlSchema.statics.generateShortcode = function() {
-  console.log("TODO generate unique shortcode even though there are around 51520374361 of permutations possible")
   return new RandExp(SHORTCODE_REGEX).gen();
 };
-
 
 
 ShortenedUrlSchema.statics.initialize = function(url, shortcode) {
