@@ -23,6 +23,10 @@ ShortenedUrlSchema.statics.validateShortcode = function (shortcode) {
   return MINIMUM_SHORTCODE_REGEX.test(shortcode)
 }
 
+ShortenedUrlSchema.statics.findByShortcode = function (shortcode) {
+  return this.findOne({ shortcode: shortcode })
+}
+
 ShortenedUrlSchema.statics.generateShortcode = function () {
   return new RandExp(SHORTCODE_REGEX).gen()
 }

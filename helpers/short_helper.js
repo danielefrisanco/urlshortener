@@ -1,66 +1,77 @@
 var ShortenedUrl = require('../models/ShortenedUrl.js')
 var constants = require('../lib/constants')
 
+/**
+* Checks if string is empty
+* param {string}
+* return {boolean}
+*/
 function isBlank (str) {
   return (str === undefined || str === null || str.replace(/\s/g, '') === '')
 }
 
-function shortenUrl (url, preferentialShortcode) {
-  if (!isBlank(preferentialShortcode) && !ShortenedUrl.validateShortcode(preferentialShortcode)) {
-    return Promise.resolve({ status: constants.SHORTCODE_NOT_VALID })
+/**
+* Given a url returns a shortened code for it, or uses the one suggested
+* param {string}
+* param {string}
+* return {string}
+*/
+async function shortenUrl (url, preferentialShortcode) {
+  if (isPreferentialShortcodeInvalid(preferentialShortcode)) {
+    return { status: constants.SHORTCODE_NOT_VALID }
   }
-  var attemptCode = preferentialShortcode
+  attemptCode = preferentialShortcode
   if (isBlank(attemptCode)) {
     attemptCode = ShortenedUrl.generateShortcode()
   }
-  return ShortenedUrl.findOne({ shortcode: attemptCode }).then((shortenedUrl) => {
-    return (shortenedUrl === null)
-  }).then((attemptCodeIsNotPresent) => {
-    if (attemptCodeIsNotPresent) {
-      return ShortenedUrl.initialize(url, attemptCode)
-    }
-  }).then((shortenedUrl) => {
+
+  shortenedUrl = await ShortenedUrl.findByShortcode(attemptCode)
+  if (!shortenedUrl) {
+    shortenedUrl = await ShortenedUrl.initialize(url, attemptCode)
     if (shortenedUrl) {
       return { status: constants.SHORTEN_URL_CREATED, shortcode: shortenedUrl.shortcode }
     }
-    return { status: constants.SHORTCODE_ALREADY_USED }
-  }).catch((error) => {
-    console.error(error)
-    return { status: constants.SHORTCODE_ALREADY_USED }
-  })
+  }
+  return { status: constants.SHORTCODE_ALREADY_USED }
 }
 
-function retrieveUrl (shortcode) {
-  return retrieveShortenedUrl(shortcode).then((result) => {
-    if (result.status === constants.SHORTEN_URL_FOUND) {
-      result.shortenedUrl.lastSeenDate = new Date()
-      result.shortenedUrl.redirectCount = result.shortenedUrl.redirectCount + 1
-      return result.shortenedUrl.save()
-    } else {
-      return Promise.reject({ status: constants.SHORTCODE_NOT_FOUND })
-    }
-  }).then((shortenedUrl) => {
+/**
+* Given a shortened code returns the mapped url and logs the access
+* param {string}
+* return {string}
+*/
+async function retrieveUrl (shortcode) {
+  result = await retrieveShortenedUrl(shortcode)
+  if (result.status === constants.SHORTEN_URL_FOUND) {
+    // move this to another fun
+    result.shortenedUrl.lastSeenDate = new Date()
+    result.shortenedUrl.redirectCount = result.shortenedUrl.redirectCount + 1
+    shortenedUrl = await result.shortenedUrl.save()
     return { status: constants.SHORTCODE_FOUND, url: shortenedUrl.url }
-  }).catch((error) => {
-    console.error(error)
-    return Promise.reject({ status: constants.SHORTCODE_NOT_FOUND })
-  })
+  } else {
+    return { status: constants.SHORTCODE_NOT_FOUND }
+  }
 }
 
-function retrieveShortenedUrl (shortcode) {
-  return ShortenedUrl.findOne({ shortcode: shortcode }).then((shortenedUrl) => {
-    if (shortenedUrl) {
-      return { status: constants.SHORTEN_URL_FOUND, shortenedUrl: shortenedUrl }
-    } else {
-      return Promise.reject({ status: constants.SHORTCODE_NOT_FOUND })
-    }
-  }).catch((error) => {
-    console.error(error)
-    return Promise.reject({ status: constants.SHORTCODE_NOT_FOUND })
-  })
+/**
+* Given a shortened code returns the mapped url
+* param {string}
+* return {string}
+*/
+async function retrieveShortenedUrl (shortcode) {
+  shortenedUrl = await ShortenedUrl.findByShortcode(shortcode)
+  if (shortenedUrl) {
+    return { status: constants.SHORTEN_URL_FOUND, shortenedUrl: shortenedUrl }
+  } else {
+    return { status: constants.SHORTCODE_NOT_FOUND }
+  }
 }
 
 exports.isBlank = isBlank
 exports.shortenUrl = shortenUrl
 exports.retrieveUrl = retrieveUrl
 exports.retrieveShortenedUrl = retrieveShortenedUrl
+
+function isPreferentialShortcodeInvalid (preferentialShortcode) {
+  return (!isBlank(preferentialShortcode) && !ShortenedUrl.validateShortcode(preferentialShortcode))
+}
